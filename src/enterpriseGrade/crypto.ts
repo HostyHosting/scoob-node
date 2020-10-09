@@ -7,7 +7,7 @@ export function encryptMessage(publicKey: Buffer, messageString: string) {
   return ciphertext.toString("base64");
 }
 
-export function decryptValue(
+export function decryptMessage(
   publicKey: Buffer,
   secretKey: Buffer,
   ciphertextString: string
