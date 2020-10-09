@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 import path from 'path';
 import yaml from 'yaml';
 import yargs from 'yargs';
@@ -6,72 +7,9 @@ import signale from 'signale';
 import fs from 'fs';
 import tempy from 'tempy';
 import childProcess from 'child_process';
-import { encryptMessage, generateKeys } from './enterpriseGrade/crypto';
-
-const PLACEHOLDER = '<encrypted>';
-
-function makeDefaultFile() {
-	const [publicKey, secretKey] = generateKeys();
-
-	const file = {
-		configuration: {
-			exampleKey: 'some value that should be encrypted',
-		},
-		keys: {
-			publicKey: publicKey.toString('hex'),
-			secretKey: secretKey.toString('hex'),
-		},
-	};
-
-	return file;
-}
-
-type EncryptableFile = {
-	configuration: Record<string, string>;
-	keys: {
-		publicKey: string;
-		privateKey: string;
-	};
-};
-
-function encryptObject(
-	{ configuration, keys }: EncryptableFile,
-	originalConfiguration: Record<string, string>,
-) {
-	const encryptedConfiguration = Object.fromEntries(
-		Object.entries(configuration).map(([key, value]) => {
-			if (value === PLACEHOLDER) {
-				if (!originalConfiguration[key]) {
-					throw new Error('moving encrypted values is not supported');
-				}
-
-				return [key, originalConfiguration[key]];
-			} else {
-				return [
-					key,
-					encryptMessage(Buffer.from(keys.publicKey, 'hex'), value),
-				];
-			}
-		}),
-	);
-
-	return {
-		configuration: encryptedConfiguration,
-		keys,
-	};
-}
-
-function addPlaceholders({ keys, configuration }: EncryptableFile) {
-	return {
-		configuration: Object.fromEntries(
-			Object.entries(configuration).map(([key, value]) => [
-				key,
-				PLACEHOLDER,
-			]),
-		),
-		keys,
-	};
-}
+import makeDefaultFile from './utils/makeDefaultFile';
+import addPlaceholders from './utils/addPlaceholders';
+import encryptConfiguration from './utils/encryptConfiguration';
 
 yargs
 	.scriptName('scoob')
@@ -92,7 +30,7 @@ yargs
 					description: 'Edit an existing secrets file',
 				})
 				.positional('file', { type: 'string', demandOption: true }),
-		(argv) => {
+		async (argv) => {
 			if (!process.env.EDITOR) {
 				signale.fatal(
 					'You must define your $EDITOR environemnt variable to use Scoob.',
@@ -135,7 +73,12 @@ yargs
 				? makeDefaultFile()
 				: yaml.parse(fs.readFileSync(filePath, 'utf-8'));
 
-			const tempFileContents = addPlaceholders(originalContents);
+			const tempFileContents = {
+				configuration: isCreating
+					? originalContents.configuration
+					: addPlaceholders(originalContents.configuration),
+				keys: originalContents.keys,
+			};
 
 			fs.writeFileSync(tempFile, yaml.stringify(tempFileContents));
 
@@ -144,17 +87,25 @@ yargs
 				childProcess.execSync(`${process.env.EDITOR} ${tempFile}`);
 			} catch {}
 
-			const newFileContents = fs.readFileSync(tempFile, 'utf-8');
-			const objectToEncrypt = yaml.parse(newFileContents);
+			const newFileText = fs.readFileSync(tempFile, 'utf-8');
+			const newFile = yaml.parse(newFileText);
 
-			const encryptedObject = encryptObject(
-				objectToEncrypt,
+			const encryptedConfiguration = await encryptConfiguration(
+				newFile.keys,
+				newFile.keys.default,
+				newFile.configuration,
 				originalContents.configuration,
 			);
 
-			fs.writeFileSync(filePath, yaml.stringify(encryptedObject));
+			fs.writeFileSync(
+				filePath,
+				yaml.stringify({
+					configuration: encryptedConfiguration,
+					keys: newFile.keys,
+				}),
+			);
 
-			// Attempt to unlink the file after a little bit of time to ensure all file handles are closed.
+			// Attempt to unlink the temp file after a little bit of time to ensure all file handles are closed.
 			setTimeout(() => {
 				try {
 					fs.unlinkSync(tempFile);
