@@ -9,7 +9,8 @@
 	"scripts": {
 		"build": "tsc",
 		"test": "ts-node --transpile-only ./src/index.ts",
-		"cli": "ts-node --transpile-only ./src/cli.ts"
+		"cli": "ts-node --transpile-only ./src/cli.ts",
+		"prepare": "yarn run build"
 	},
 	"dependencies": {
 		"signale": "^1.4.0",
