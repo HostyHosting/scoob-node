@@ -8,10 +8,11 @@ type Keys = {
 
 function resolveKey(text: string) {
 	if (text.startsWith('$')) {
-		text = process.env[text.slice(1)]!;
+		const envVar = text.slice(1);
+		text = process.env[envVar]!;
 		if (!text) {
 			throw new Error(
-				`Expected to find environment variable "${text}", but did not find one.`,
+				`Expected to find environment variable "${envVar}", but did not find one.`,
 			);
 		}
 	}
