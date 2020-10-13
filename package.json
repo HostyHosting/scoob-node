@@ -10,7 +10,8 @@
 		"build": "tsc",
 		"test": "ts-node --transpile-only ./src/index.ts",
 		"cli": "ts-node --transpile-only ./src/cli.ts",
-		"prepare": "yarn run build"
+		"prepare": "yarn run build",
+		"postpublish": "git push && git push --tags"
 	},
 	"dependencies": {
 		"commander": "^6.1.0",
