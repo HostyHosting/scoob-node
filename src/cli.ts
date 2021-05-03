@@ -104,7 +104,9 @@ program
 
 		// In case the editor throws, just ignore it.
 		try {
-			childProcess.execSync(`${process.env.EDITOR} ${tempFile}`);
+			childProcess.spawnSync(process.env.EDITOR, [tempFile], {
+				stdio: 'inherit',
+			});
 		} catch {}
 
 		const newFileText = fs.readFileSync(tempFile, 'utf-8');
