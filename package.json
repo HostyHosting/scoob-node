@@ -1,6 +1,6 @@
 {
   "name": "scoob",
-	"version": "0.3.0",
+  "version": "0.3.0",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,6 +20,7 @@
     "test": "tsdx test",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
+    "cli": "ts-node --transpile-only ./src/cli.ts",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
@@ -54,9 +55,11 @@
   ],
   "devDependencies": {
     "@size-limit/preset-small-lib": "^4.10.2",
+    "@types/sodium-native": "^2.3.5",
     "@types/uuid": "^8.3.0",
     "husky": "^6.0.0",
     "size-limit": "^4.10.2",
+    "ts-node": "^9.1.1",
     "tsdx": "^0.14.1",
     "tslib": "^2.2.0",
     "typescript": "^4.2.4"

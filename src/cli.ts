@@ -17,6 +17,11 @@ const program = new Command();
 
 program.version(require('../package.json').version);
 
+function fatal(message: string): never {
+  console.error(chalk.bold.red(message));
+  process.exit(1);
+}
+
 program
   .command('start <file> [script...]')
   .allowUnknownOption()
@@ -25,9 +30,14 @@ program
   )
   .action(async (file, script) => {
     const filePath = path.resolve(process.cwd(), file);
-    if (!fs.existsSync(filePath)) {
-      console.error(chalk.red(`Could not find "${filePath}"`));
-      process.exit(1);
+    const stat = fs.statSync(filePath);
+
+    if (!stat) {
+      fatal(`Could not find "${filePath}".`);
+    }
+
+    if (!stat.isFile()) {
+      fatal(`Expected "${filePath}" to be a file, but it was not.`);
     }
 
     const configuration: any = await loadSecrets(filePath);
@@ -46,20 +56,13 @@ program
   });
 
 program
-  .command('<file>', {
-    isDefault: true,
-  })
+  .command('<file>')
   .description('create or edit a scoob configuration file')
   .option('-e, --edit', 'edit the configuration file')
   .option('-c, --create', 'create a configuration file')
   .action(async ({ edit, create }, [file]) => {
     if (!process.env.EDITOR) {
-      console.log(
-        chalk.red(
-          'You must define your $EDITOR environemnt variable to use Scoob.'
-        )
-      );
-      process.exit(1);
+      fatal('You must define your $EDITOR environemnt variable to use Scoob.');
     }
 
     if (!create && !edit) {
@@ -71,26 +74,17 @@ program
     }
 
     if (create && edit) {
-      console.log(chalk.red('You cannot provide both create and edit mode.'));
-      process.exit(1);
+      fatal('You cannot provide both create and edit mode.');
     }
 
     const filePath = path.resolve(process.cwd(), file);
     if (fs.existsSync(filePath) && create) {
-      console.log(
-        chalk.red(
-          'The create flag was provided, but the secrets file already exists.'
-        )
+      fatal(
+        'The create flag was provided, but the secrets file already exists.'
       );
-      process.exit(1);
     }
     if (!fs.existsSync(filePath) && edit) {
-      console.log(
-        chalk.red(
-          'The edit flag was provided, but the secrets file does not exist.'
-        )
-      );
-      process.exit(1);
+      fatal('The edit flag was provided, but the secrets file does not exist.');
     }
 
     const isCreating = create || (!create && !edit && !fs.existsSync(filePath));
