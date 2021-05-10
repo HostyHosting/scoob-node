@@ -1,30 +1,71 @@
 {
-	"name": "scoob",
-	"version": "0.2.0",
-	"main": "./lib/index.js",
-	"bin": {
-		"scoob": "./lib/cli.js"
-	},
-	"license": "MIT",
-	"scripts": {
-		"build": "tsc",
-		"test": "ts-node --transpile-only ./src/index.ts",
-		"cli": "ts-node --transpile-only ./src/cli.ts",
-		"prepare": "yarn run build",
-		"postpublish": "git push && git push --tags"
-	},
-	"dependencies": {
-		"commander": "^6.1.0",
-		"signale": "^1.4.0",
-		"sodium-native": "^3.2.0",
-		"tempy": "^0.7.1",
-		"yaml": "^1.10.0"
-	},
-	"devDependencies": {
-		"@types/node": "^14.11.8",
-		"@types/signale": "^1.4.1",
-		"@types/sodium-native": "^2.3.5",
-		"ts-node": "^9.0.0",
-		"typescript": "^4.0.3"
-	}
+  "name": "scoob",
+	"version": "0.3.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "bin": {
+    "scoob": "./lib/cli.js"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "author": "Jordan Gensler",
+  "module": "dist/scoobert.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/scoobert.cjs.production.min.js",
+      "limit": "50 KB",
+      "ignore": [
+        "fs"
+      ]
+    },
+    {
+      "path": "dist/scoobert.esm.js",
+      "limit": "50 KB",
+      "ignore": [
+        "fs"
+      ]
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.10.2",
+    "@types/uuid": "^8.3.0",
+    "husky": "^6.0.0",
+    "size-limit": "^4.10.2",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.2.0",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "chalk": "^4.1.1",
+    "commander": "^7.2.0",
+    "sodium-native": "^3.2.1",
+    "uuid": "^8.3.2",
+    "yaml": "^1.10.2"
+  }
 }
